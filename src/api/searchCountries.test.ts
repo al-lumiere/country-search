@@ -78,4 +78,81 @@ describe('searchCountries', () => {
       networkError,
     );
   });
+
+  describe('отмена и таймаут', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    });
+
+    function mockPendingFetch() {
+      fetchMock.mockImplementation(
+        (_input, options) =>
+          new Promise<Response>((_resolve, reject) => {
+            const signal = options?.signal;
+
+            if (!signal) {
+              reject(new Error('AbortSignal is missing'));
+              return;
+            }
+
+            if (signal.aborted) {
+              reject(signal.reason);
+              return;
+            }
+
+            signal.addEventListener('abort', () => reject(signal.reason), {
+              once: true,
+            });
+          }),
+      );
+    }
+
+    it('отменяет запрос по внешнему сигналу с AbortError', async () => {
+      mockPendingFetch();
+      const controller = new AbortController();
+
+      const request = searchCountries('spain', controller.signal);
+      const assertion = expect(request).rejects.toMatchObject({
+        name: 'AbortError',
+      });
+
+      controller.abort();
+
+      await assertion;
+    });
+
+    it('прерывает запрос через 10 секунд с TimeoutError', async () => {
+      mockPendingFetch();
+      const controller = new AbortController();
+      const onError = vi.fn();
+
+      const request = searchCountries('spain', controller.signal).catch(
+        onError,
+      );
+
+      try {
+        await vi.advanceTimersByTimeAsync(9999);
+
+        expect(onError).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'TimeoutError',
+          }),
+        );
+        expect(controller.signal.aborted).toBe(false);
+      } finally {
+        controller.abort();
+        await request;
+      }
+    });
+  });
 });
