@@ -3,6 +3,17 @@ type Debounce = <Args extends unknown[]>(
   delay: number,
 ) => (...args: Args) => void;
 
-export const debounce: Debounce = () => {
-  throw new Error('Not implemented');
+export const debounce: Debounce = (fn, delay) => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  return (...args) => {
+    if (timer !== undefined) {
+      clearTimeout(timer);
+    }
+
+    timer = setTimeout(() => {
+      timer = undefined;
+      fn(...args);
+    }, delay);
+  };
 };
