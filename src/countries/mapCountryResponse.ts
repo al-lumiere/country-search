@@ -10,5 +10,8 @@ export const mapCountryResponse: MapCountryResponse = (raw) => {
     region: raw.region,
     population: raw.population,
     languages: raw.languages?.map((language) => language.name) ?? [],
+    area: raw.area ?? null,
+    borders: [...(raw.borders ?? [])],
+    currencies: raw.currencies?.map((currency) => currency.name) ?? [],
   };
 };
