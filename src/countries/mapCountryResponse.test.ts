@@ -26,6 +26,9 @@ describe('mapCountryResponse', () => {
       region: 'Europe',
       population: 47000000,
       languages: ['Spanish', 'Catalan'],
+      area: null,
+      borders: [],
+      currencies: [],
     });
   });
 
@@ -47,5 +50,20 @@ describe('mapCountryResponse', () => {
     mapCountryResponse(raw);
 
     expect(raw).toEqual(original);
+  });
+
+  it('сохраняет данные для подробного просмотра страны', () => {
+    const raw = createCountryResponse();
+    raw.area = 505992;
+    raw.borders = ['FRA', 'PRT'];
+    raw.currencies = [{ name: 'Euro' }];
+
+    const result = mapCountryResponse(raw);
+
+    expect(result).toMatchObject({
+      area: 505992,
+      borders: ['FRA', 'PRT'],
+      currencies: ['Euro'],
+    });
   });
 });

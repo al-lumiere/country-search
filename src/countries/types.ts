@@ -5,6 +5,9 @@ export interface CountryApiResponse {
   region: string;
   population: number;
   languages?: { name: string }[];
+  area?: number;
+  borders?: string[];
+  currencies?: { name: string }[];
 }
 
 export interface Country {
@@ -14,4 +17,7 @@ export interface Country {
   region: string;
   population: number;
   languages: string[];
+  area: number | null;
+  borders: string[];
+  currencies: string[];
 }
